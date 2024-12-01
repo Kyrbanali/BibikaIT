@@ -1,0 +1,38 @@
+name: PHP CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Шаг 1: Проверяем исходный код
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Шаг 2: Настройка PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'  # Укажите нужную версию PHP
+          extensions: mbstring, curl  # Необходимые расширения PHP
+
+      # Шаг 3: Установка зависимостей через Composer
+      - name: Install dependencies
+        run: |
+          curl -sS https://getcomposer.org/installer | php
+          php composer.phar install
+
+      # Шаг 4: Запуск тестов
+      - name: Run tests
+        run: |
+          php -S 127.0.0.1:8000 -t public &  # Запуск встроенного сервера
+          sleep 5  # Даем серверу время запуститься
+          curl -s http://127.0.0.1:8000  # Делаем запрос, проверяем сервер
