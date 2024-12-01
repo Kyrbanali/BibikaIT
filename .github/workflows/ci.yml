@@ -93,8 +93,7 @@ jobs:
       # Шаг 5: Применение миграций
       - name: Run migrations
         run: |
-          php artisan migrate
-          yes
+          php artisan migrate -y
 
       # Шаг 6: Запуск тестов
       - name: Run tests
