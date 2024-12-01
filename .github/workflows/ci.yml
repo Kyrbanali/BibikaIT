@@ -1,108 +1,75 @@
-name: CI/CD for Laravel
+name: CI for Laravel with Docker
 
 on:
   push:
     branches:
-      - master  # Запускать при пушах в ветку master
+      - master  # Trigger on push to master
   pull_request:
     branches:
-      - master  # Запускать при пулл-запросах на ветку master
+      - master  # Trigger on pull request to master
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
 
-#    services:
-#      # Настроим PostgreSQL контейнер
-#      postgres:
-#        image: postgres:15
-#        env:
-#          POSTGRES_USER: your_user
-#          POSTGRES_PASSWORD: your_password
-#          POSTGRES_DB: your_database
-#        ports:
-#          - 5432:5432
-#        options: --health-cmd="pg_isready -U your_user" --health-timeout=30s --health-retries=3
+    services:
+      # PostgreSQL service for your Laravel project
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: your_user
+          POSTGRES_PASSWORD: your_password
+          POSTGRES_DB: your_database
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U your_user" --health-timeout=30s --health-retries=3
 
     steps:
-      # Шаг 1: Проверка исходного кода
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Установка зависимостей для Docker
-        run: |
-            sudo apt-get remove -y containerd containerd.io
-            sudo apt-get update
-            sudo apt-get install -y \
-              apt-transport-https \
-              ca-certificates \
-              curl \
-              software-properties-common
-
-      - name: Добавление Docker репозитория
-        run: |
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-
-      - name: Установка Docker
-        run: |
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-          sudo systemctl start docker
-          sudo systemctl enable docker
-
-      - name: Установка Docker Compose
-        run: |
-          sudo apt-get install -y curl
-          DOCKER_COMPOSE_VERSION=1.29.2
-          sudo curl -L "https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-
-      - name: Проверка установки
-        run: |
-          docker --version
-          docker-compose --version
-
-      # Шаг 2: Установка PHP
+      # Step 2: Set up PHP environment
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'  # Укажите нужную версию PHP
+          php-version: '7.4'  # Set your PHP version
           extensions: mbstring, bcmath, xml, ctype, json, gd, pdo, pdo_pgsql
 
-      # Шаг 3: Установка зависимостей через Composer
+      # Step 3: Install Composer dependencies
       - name: Install dependencies
         run: |
           curl -sS https://getcomposer.org/installer | php
           php composer.phar install --no-interaction --prefer-dist --optimize-autoloader
 
-      # Шаг 4: Копирование .env и настройка конфигурации
-#      - name: Set up .env file
-#        run: |
-#          cp .env.example .env
-#          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=pgsql/' .env
-#          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
-#          sed -i 's/DB_PORT=3306/DB_PORT=5432/' .env
-#          sed -i 's/DB_DATABASE=homestead/DB_DATABASE=your_database/' .env
-#          sed -i 's/DB_USERNAME=root/DB_USERNAME=your_user/' .env
-#          sed -i 's/DB_PASSWORD=secret/DB_PASSWORD=your_password/' .env
-      - name: поднимаем докер
-        run: docker-compose up -d
-      - name: Server
-        run: php -S 127.0.0.1:8000 -t public &
-      # Шаг 5: Применение миграций
+      # Step 4: Set up environment file and Docker configuration
+      - name: Set up .env file
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=pgsql/' .env
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_PORT=3306/DB_PORT=5432/' .env
+          sed -i 's/DB_DATABASE=homestead/DB_DATABASE=your_database/' .env
+          sed -i 's/DB_USERNAME=root/DB_USERNAME=your_user/' .env
+          sed -i 's/DB_PASSWORD=secret/DB_PASSWORD=your_password/' .env
+
+      # Step 5: Start Docker services
+      - name: Start Docker services
+        run: |
+          docker-compose up -d
+
+      # Step 6: Run migrations
       - name: Run migrations
         run: |
           php artisan migrate --force
 
-      # Шаг 6: Запуск тестов
+      # Step 7: Run tests
       - name: Run tests
         run: |
           vendor/bin/phpunit --coverage-text
 
-      # Шаг 7: Развертывание (например, через SSH или другой сервер)
+      # Step 8: Deploy (if needed, example for SSH deployment)
       - name: Deploy
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
-          # Пример деплоя через SSH (поменяйте на свой путь деплоя)
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "cd /path/to/your/project && git pull origin main && composer install && php artisan migrate"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "cd /path/to/your/project && git pull origin master && composer install && php artisan migrate"
