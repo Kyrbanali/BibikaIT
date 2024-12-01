@@ -3,10 +3,10 @@ name: CI/CD for Laravel
 on:
   push:
     branches:
-      - main  # Запускать при пушах в ветку main
+      - master  # Запускать при пушах в ветку main
   pull_request:
     branches:
-      - main  # Запускать при пулл-запросах на ветку main
+      - master  # Запускать при пулл-запросах на ветку main
 
 jobs:
   build:
