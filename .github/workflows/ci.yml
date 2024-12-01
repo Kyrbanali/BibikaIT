@@ -1,0 +1,58 @@
+name: CI/CD for Laravel
+
+on:
+  push:
+    branches:
+      - main  # Запускать при пушах в ветку main
+  pull_request:
+    branches:
+      - main  # Запускать при пулл-запросах на ветку main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Шаг 1: Проверка исходного кода
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Шаг 2: Установка PHP
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4' # Укажите нужную версию PHP
+          extensions: mbstring, bcmath, xml, ctype, json, gd, pdo, pdo_mysql
+
+      # Шаг 3: Установка зависимостей через Composer
+      - name: Install dependencies
+        run: |
+          curl -sS https://getcomposer.org/installer | php
+          php composer.phar install --no-interaction --prefer-dist --optimize-autoloader
+
+      # Шаг 4: Установка и настройка базы данных
+      - name: Set up database
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-server
+          sudo service mysql start
+          mysql -e "CREATE DATABASE laravel_test;"
+
+      # Шаг 5: Применение миграций
+      - name: Run migrations
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate
+
+      # Шаг 6: Запуск тестов
+      - name: Run tests
+        run: |
+          vendor/bin/phpunit --coverage-text
+
+      # Шаг 7: Развертывание (например, через SSH или другой сервер)
+      - name: Deploy
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Пример деплоя через SSH (поменяйте на свой путь деплоя)
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} "cd /path/to/your/project && git pull origin main && composer install && php artisan migrate"
