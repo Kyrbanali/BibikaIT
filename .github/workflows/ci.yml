@@ -89,7 +89,7 @@ jobs:
       - name: поднимаем докер
         run: docker-compose up -d
       - name: Server
-        run: php -S 127.0.0.1:8000 -t public
+        run: php -S 127.0.0.1:8000 -t public &
       # Шаг 5: Применение миграций
       - name: Run migrations
         run: |
