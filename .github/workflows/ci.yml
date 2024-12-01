@@ -22,7 +22,7 @@ jobs:
           POSTGRES_DB: your_database
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready -U postgres" --health-timeout=30s --health-retries=3
+        options: --health-cmd="pg_isready -U your_user" --health-timeout=30s --health-retries=3
 
     steps:
       # Шаг 1: Проверка исходного кода
@@ -49,9 +49,9 @@ jobs:
           sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=pgsql/' .env
           sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
           sed -i 's/DB_PORT=3306/DB_PORT=5432/' .env
-          sed -i 's/DB_DATABASE=homestead/DB_DATABASE=laravel_test/' .env
-          sed -i 's/DB_USERNAME=root/DB_USERNAME=postgres/' .env
-          sed -i 's/DB_PASSWORD=secret/DB_PASSWORD=root/' .env
+          sed -i 's/DB_DATABASE=homestead/DB_DATABASE=your_database/' .env
+          sed -i 's/DB_USERNAME=root/DB_USERNAME=your_user/' .env
+          sed -i 's/DB_PASSWORD=secret/DB_PASSWORD=your_password/' .env
 
       # Шаг 5: Применение миграций
       - name: Run migrations
