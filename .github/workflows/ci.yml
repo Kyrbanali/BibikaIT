@@ -52,7 +52,8 @@ jobs:
           sed -i 's/DB_DATABASE=homestead/DB_DATABASE=your_database/' .env
           sed -i 's/DB_USERNAME=root/DB_USERNAME=your_user/' .env
           sed -i 's/DB_PASSWORD=secret/DB_PASSWORD=your_password/' .env
-
+      - name: поднимаем докер
+        run: docker-compose up -d
       # Шаг 5: Применение миграций
       - name: Run migrations
         run: |
