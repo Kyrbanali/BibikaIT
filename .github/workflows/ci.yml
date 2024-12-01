@@ -56,7 +56,6 @@ jobs:
       # Шаг 5: Применение миграций
       - name: Run migrations
         run: |
-          php artisan key:generate
           php artisan migrate
 
       # Шаг 6: Запуск тестов
