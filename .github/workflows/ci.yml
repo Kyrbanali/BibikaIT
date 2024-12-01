@@ -24,12 +24,6 @@ jobs:
           php-version: '7.4'  # Укажите нужную версию PHP
           extensions: mbstring, curl  # Необходимые расширения PHP
 
-      # Шаг 3: Установка зависимостей через Composer
-      - name: Install dependencies
-        run: |
-          curl -sS https://getcomposer.org/installer | php
-          php composer.phar install
-
       # Шаг 4: Запуск тестов
       - name: Run tests
         run: |
